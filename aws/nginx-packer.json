@@ -1,0 +1,31 @@
+{
+    "variables":{
+        "aws_access_key":"",
+        "aws_secret_key":"",
+        "region":"us-east-1",
+        "source_ami":"ami-007855ac798b5175e",
+        "instance_type":"t2.micro",
+        "ssh_username":"ubuntu"
+    },
+    "builders":[
+      {
+        "type": "amazon-ebs",
+        "access_key":"{{user `aws_access_key`}}",
+        "secret_key":"{{user `aws_secret_key`}}",
+        "region":"{{user `region`}}",
+        "source_ami":"{{user `source_ami`}}",
+        "instance_type":"{{user `instance_type`}}",
+        "ssh_username":"{{user `ssh_username`}}",
+        "ami_name":"packer-nginx-{{timestamp}}"
+      }
+    ],
+    "provisioners" :[
+        {
+            "type":"shell",
+            "inline":[
+                "sudo apt-get install nginx -y",
+                "sudo service nginx restart"
+            ]
+        }
+    ]
+}

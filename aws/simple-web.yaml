@@ -1,0 +1,79 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: aws cloud sample template.
+Metadata: {}
+Parameters:
+  keyname:
+    Description: its keyname to connect with ec2 instance
+    Type: 'AWS::EC2::KeyPair::KeyName'
+    Default: ''
+    ConstraintDescription: it must be name of an existing key pair in the same az.
+  sshlocation:
+    Description: define the ip address range to connect with ec2 instances
+    Type: String
+    Default: 0.0.0.0/0
+    AllowedPattern: ''
+  instanceType:
+    Description: define the instance type of ec2
+    Type: String
+    Default: t1.micro
+    AllowedValues:
+      - t1.micro
+      - t2.micro
+      - t1.small
+      - t2.medium
+      - m1.small
+    ConstraintDescription: must be a valid ect instance
+Mappings:
+  AWSInstanceType2Arch:
+    t1.micro:
+      Arch: PV64
+    t2.micro:
+      Arch: PV64
+    t1.small:
+      Arch: PV64
+    t2.medium:
+      Arch: PV64
+  AWSRegionArch2AMI:
+    us-east-1:
+      PV64: ami-50842d38
+      HVM64: ami-08842d60
+      HVMG2: ami-3a329952
+Conditions: {}
+Resources:
+  ElasticLoadBalancer:
+    Type: 'AWS::ElasticLoadBalancing::LoadBalancer'
+    Properties:
+      AvailabilityZones: Ref GetAZs
+      Listeners:
+        - LoadBalancerPort: 80
+          instancePort: 80
+          Protocol: HTTP
+          PolicyNames:
+            - CookieBasedPolicy
+      Tags:
+        - Key: simple-web-elb
+          Value: loadbalancer-elb
+      HealthCheck:
+        Target: 'HTTP:80/'
+        HealthyThreshold: 2
+        UnhealthyThreshold: 5
+        Interval: 10
+        Timeout: 5
+  WebServerGroup:
+    Type: 'AWS::AutoScaling::AutoScalingGroup'
+    Properties:
+      AutoScalingGroupName: WebServerGroup
+      DesiredCapacity: '1'
+      LaunchConfigurationName: Ref LaunchConfig
+      MaxSize: '5'
+      MinSize: '1'
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT5M
+    UpdatePolicy:
+      AutoScalingRollingUpdate:
+        MinInstancesInService: '1'
+        MaxBatchSize: '1'
+        PauseTime: PT15M
+        WaitOnResourceSignals: 'true'
+Outputs: {}
